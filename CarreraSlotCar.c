@@ -10,6 +10,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#include <ncurses.h>
+
 #include "carrera.h"
 #include "ttyTools.h"
 
@@ -18,23 +20,74 @@ char *CARRERA_TIMING_QUERY = "\"?";
 char *CARRERA_CU_FIRMWARE = "\"0";
 
 
+
+void initDisplay() {
+  WINDOW *mainWindow = initscr();
+  start_color();
+  init_pair(1,COLOR_WHITE,COLOR_BLACK);
+  init_pair(2,COLOR_GREEN,COLOR_BLACK);
+  wbkgd(mainWindow,COLOR_PAIR(1));
+
+  raw();
+  noecho();
+  timeout(10);
+}
+
+void refreshDisplay() {
+  refresh();
+}
+
+void closeDisplay() {
+  endwin();
+}
+
+void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
+
+  int carno=0;
+  int left_border = 5, header_top = 1;
+  
+
+  // print header
+  attron(A_BOLD);
+  mvprintw(header_top + carno,left_border,"Car#");
+  mvprintw(header_top + carno,left_border + 10,"Current");
+  mvprintw(header_top + carno,left_border + 20,"Fastest");
+  mvprintw(header_top + carno,left_border + 30,"Diff");
+  mvprintw(header_top + carno,left_border + 40,"Laps");
+  attroff(A_BOLD);
+
+  // print car list
+  for (carno=0; carno <= 7; carno ++)
+    //if ( car_stati[carno].active == 1)
+      {
+
+	  
+
+	mvprintw(header_top + carno + 1,left_border,"%u",car_stati[carno].car_number);
+
+	// show personal best in green
+	if (car_stati[carno].current_laptime > 0 &&  (car_stati[carno].current_laptime == car_stati[carno].fastest_laptime))
+	  attron(COLOR_PAIR(2));
+
+	mvprintw(header_top + carno + 1,left_border + 10,"%u",car_stati[carno].current_laptime);
+	mvprintw(header_top + carno + 1,left_border + 20,"%u",car_stati[carno].fastest_laptime);
+	
+	// turn off personal best in green
+	attroff(COLOR_PAIR(2));
+	mvprintw(header_top + carno + 1,left_border + 30,"%u",(car_stati[carno].current_laptime-car_stati[carno].fastest_laptime));
+	mvprintw(header_top + carno + 1,left_border + 40,"%u",car_stati[carno].laps);
+      }
+  
+}
+
+
+
+
+// return lower 4 bits of char as integer
 int get4Bits(char c) { return (int)(c & 0xf);}
 
-/* unsigned int getTimer (struct STRUCT_CARRERA_LAPINFO *scl ) { */
-
-/*   return  */
-/*     (get4Bits(scl->timer[1]) << 28) + */
-/*     (get4Bits(scl->timer[0]) << 24) + */
-/*     (get4Bits(scl->timer[3]) << 20) + */
-/*     (get4Bits(scl->timer[2]) << 16) + */
-/*     (get4Bits(scl->timer[5]) << 12) + */
-/*     (get4Bits(scl->timer[4]) << 8) + */
-/*     (get4Bits(scl->timer[7]) << 4) + */
-/*     (get4Bits(scl->timer[6])); */
-
-/* } */
-
-
+// convert Carrera CU timer information into an integer value
+// holding ms
 unsigned int getTimer (struct STRUCT_CARRERA_LAPINFO scl ) {
   return 
     (get4Bits(scl.timer[1]) << 28) +
@@ -47,6 +100,8 @@ unsigned int getTimer (struct STRUCT_CARRERA_LAPINFO scl ) {
     (get4Bits(scl.timer[6]));
 }
 
+
+// reset car stati
 void resetCarStati(struct STRUCT_CAR_STATUS *car_stati) {
 
 int carno=0;
@@ -99,7 +154,9 @@ void main (int args, char* argv[]){
 
  resetCarStati(pcar_stati);
 
- while (1){
+ initDisplay();
+
+ while (getch() != 'q'){
 
    unsigned int timer = 0, laptime = 0;
 
@@ -196,28 +253,16 @@ void main (int args, char* argv[]){
 
    }
 
- usleep (50000);
+   usleep (50000);
 
- // display current track status
- int cars=0;
- for (cars=0; cars <= 7 ;cars ++) {
-   if ( car_stati[cars].active == 1)
-      // show Car number, current timer and laptime
-       printf ("(Car#) %u (LastLap) %u (FastestLap) %u (#Laps) %u\n", 
-	       car_stati[cars].car_number, 
-	       car_stati[cars].current_laptime , 
-	       car_stati[cars].fastest_laptime,
-	       car_stati[cars].laps);
-   
-
- }
-
+   displayTimes(car_stati);
+   refreshDisplay();
 
  }
 
 
 
-
+ closeDisplay();
 
 } 
 
