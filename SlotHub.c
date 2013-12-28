@@ -57,11 +57,14 @@ void displayTrackStatus(struct STRUCT_TRACK_STATUS *pTrackStatus) {
   int left_border = 5, 
     header_top = 15;
 
-  int col_light_status = 0, col_fuel_mode = 25, col_pitlane_installed = 40, col_lapcounter_installed = 60;
+  int col_light_status = 0, 
+    col_fuel_mode = 25, 
+    col_pitlane_installed = 40, 
+    col_lapcounter_installed = 60;
 
   // print header
   attron(A_BOLD);
-  mvprintw(header_top,left_border + col_light_status,"(Light Status) %u" + pTrackStatus->lights_status);
+  mvprintw(header_top,left_border + col_light_status,"(Lights Status) %u", pTrackStatus->lights_status);
   mvprintw(header_top,left_border + col_fuel_mode,"(Fuel Mode) %u",pTrackStatus->fuel_mode);  
   mvprintw(header_top,left_border + col_pitlane_installed,"(Pitlane) %u",pTrackStatus->pitlane_installed); 
   mvprintw(header_top,left_border + col_lapcounter_installed,"(Lapcounter) %u",pTrackStatus->lapcounter_installed);
@@ -102,7 +105,7 @@ void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
 
   // print car list
   int carno=1;
-  for (carno=1; carno <= 6; carno ++)
+  for (carno=1; carno <= 7; carno ++)
       {
 
 	mvprintw(header_top + carno + 1,left_border + col_car_number,"%u",car_stati[carno].car_number);
@@ -363,11 +366,15 @@ void main (int argc, char **argv){
 	 car_stati[count].in_pit = inPits(carrera_response, car_stati[count].car_number) ;	     	 
        }
 
+     // ------------------------------------------------------
      // set track information (light status, fuel mode)
+     // ------------------------------------------------------
      track_status->lights_status = get4Bits(((union DATA)carrera_response->data).scts.start_light_status);
      track_status->fuel_mode =  get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 3;
 
+     // ------------------------------------------------------
      // check for installed equipment (pitlane, lapcounter)
+     // ------------------------------------------------------
      track_status->pitlane_installed =  (get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 4) >> 2;
      track_status->lapcounter_installed =  (get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 8) >> 3;     
 
