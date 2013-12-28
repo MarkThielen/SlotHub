@@ -15,3 +15,22 @@ There is a lot to learn. Most information I got so far is from Slotbär (www.slo
 
 12/22/2013
 At this stage there is some very simple functionality implemented which shows the lap times of the cars on the console and also the current track status information.
+
+12/28/2013
+System shows lap times of cars, some track information in a table format using ncurses. 
+
+The car status information include 
++ Car Number
++ Last Laptime
++ Fastest Laptime
++ Diff Fastest to Last 
++ Number of Pit Stops
++ Fuel indicator
+
+Track Status Information include
++ Status of Start Lights
++ Fuel Mode Setting (Off, On, Real)
++ Pitlane Adapter flag
++ Laptime connected flag
+
+It works pretty well so far. There are a lot of things to optimize, especially the code and some weird behavior when the terminal window size is changed. Happy with the progress so far.
