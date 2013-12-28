@@ -29,6 +29,9 @@ void initDisplay() {
   start_color();
   init_pair(1,COLOR_WHITE,COLOR_BLACK);
   init_pair(2,COLOR_GREEN,COLOR_BLACK);
+  init_pair(3,COLOR_RED,COLOR_BLACK);
+  init_pair(4,COLOR_YELLOW,COLOR_BLACK);
+
   wbkgd(mainWindow,COLOR_PAIR(1));
 
   raw();
@@ -44,39 +47,104 @@ void closeDisplay() {
   endwin();
 }
 
-void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
 
-  int carno=0;
-  int left_border = 5, header_top = 1;
-  
+// -------------------------------------
+// Display track status information
+// -------------------------------------
+void displayTrackStatus(struct STRUCT_TRACK_STATUS *pTrackStatus) {
+
+ // left border and header position
+  int left_border = 5, 
+    header_top = 15;
+
+  int col_light_status = 0, col_fuel_mode = 25, col_pitlane_installed = 40, col_lapcounter_installed = 60;
 
   // print header
   attron(A_BOLD);
-  mvprintw(header_top + carno,left_border,"Car#");
-  mvprintw(header_top + carno,left_border + 10,"Current");
-  mvprintw(header_top + carno,left_border + 20,"Fastest");
-  mvprintw(header_top + carno,left_border + 30,"Diff");
-  mvprintw(header_top + carno,left_border + 40,"Laps");
+  mvprintw(header_top,left_border + col_light_status,"(Light Status) %u" + pTrackStatus->lights_status);
+  mvprintw(header_top,left_border + col_fuel_mode,"(Fuel Mode) %u",pTrackStatus->fuel_mode);  
+  mvprintw(header_top,left_border + col_pitlane_installed,"(Pitlane) %u",pTrackStatus->pitlane_installed); 
+  mvprintw(header_top,left_border + col_lapcounter_installed,"(Lapcounter) %u",pTrackStatus->lapcounter_installed);
+
+
+  attroff(A_BOLD);
+
+}
+
+// -------------------------------------------
+// display car times and status
+// -------------------------------------------
+void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
+
+  // left border and header position
+  int left_border = 5, 
+    header_top = 1;
+  
+  // info column definition
+  int col_car_number=0, 
+    col_current_lap = 5, 
+    col_fastest_lap=15, 
+    col_diff=25, 
+    col_laps=35, 
+    col_pits=45,
+    col_fuel_status=55;
+
+  // print header
+  attron(A_BOLD);
+  mvprintw(header_top,left_border,"Car#");
+  mvprintw(header_top,left_border + col_current_lap,"Current");
+  mvprintw(header_top,left_border + col_fastest_lap,"Fastest");
+  mvprintw(header_top,left_border + col_diff,"Diff");
+  mvprintw(header_top,left_border + col_laps,"Laps");
+  mvprintw(header_top,left_border + col_pits,"Pits");
+  mvprintw(header_top,left_border + col_fuel_status,"0------50------100");
   attroff(A_BOLD);
 
   // print car list
-  for (carno=0; carno <= 7; carno ++)
-    //if ( car_stati[carno].active == 1)
+  int carno=1;
+  for (carno=1; carno <= 6; carno ++)
       {
 
-	mvprintw(header_top + carno + 1,left_border,"%u",car_stati[carno].car_number);
+	mvprintw(header_top + carno + 1,left_border + col_car_number,"%u",car_stati[carno].car_number);
 
 	// show personal best in green
 	if (car_stati[carno].current_laptime > 0 &&  (car_stati[carno].current_laptime == car_stati[carno].fastest_laptime))
 	  attron(COLOR_PAIR(2));
 
-	mvprintw(header_top + carno + 1,left_border + 10,"%u",car_stati[carno].current_laptime);
-	mvprintw(header_top + carno + 1,left_border + 20,"%u",car_stati[carno].fastest_laptime);
+	mvprintw(header_top + carno + 1,left_border + col_current_lap,"%u",car_stati[carno].current_laptime);
+	mvprintw(header_top + carno + 1,left_border + col_fastest_lap,"%u",car_stati[carno].fastest_laptime);
 	
 	// turn off personal best in green
 	attroff(COLOR_PAIR(2));
-	mvprintw(header_top + carno + 1,left_border + 30,"%u",(car_stati[carno].current_laptime-car_stati[carno].fastest_laptime));
-	mvprintw(header_top + carno + 1,left_border + 40,"%u",car_stati[carno].laps);
+	mvprintw(header_top + carno + 1,left_border + col_diff,"%u",(car_stati[carno].current_laptime-car_stati[carno].fastest_laptime));
+	mvprintw(header_top + carno + 1,left_border + col_laps,"%u",car_stati[carno].laps);
+	mvprintw(header_top + carno + 1,left_border + col_pits,"%u",car_stati[carno].pits);
+	
+	//mvprintw(header_top + carno + 1,left_border + 60,"%u",car_stati[carno].fuel_status);
+
+	// -------------------------------------------------------
+	// show fuel bar 0%-100% with moving current
+	// -------------------------------------------------------
+	int fuel_color_pair = 1;
+	// if fuel is 15-8 show green
+	if (car_stati[carno].fuel_status >=8)
+	  fuel_color_pair = 2;
+	// if fuel 7-2 show red fuel bars
+	else if (car_stati[carno].fuel_status <= 7 && car_stati[carno].fuel_status >= 2 )
+	  fuel_color_pair = 4;
+	// if fuel <= 1 show red fuel bars
+	else if (car_stati[carno].fuel_status <= 1)
+	  fuel_color_pair = 3;
+
+	attron(COLOR_PAIR(fuel_color_pair));
+	
+	int fuelbars=0;
+	for (;fuelbars <= 15;fuelbars++)
+	  mvprintw(header_top + carno + 1, left_border + col_fuel_status + fuelbars,"-");
+	mvprintw(header_top + carno + 1, left_border + col_fuel_status + car_stati[carno].fuel_status ,"+");
+	
+	attroff(COLOR_PAIR(fuel_color_pair));
+
       }
   
 }
@@ -101,9 +169,16 @@ unsigned int getTimer (struct STRUCT_CARRERA_LAPINFO scl ) {
     (get4Bits(scl.timer[6]));
 }
 
+// function that indicates that passed car number is currently in pits
+// returns 1 if true, 0 otherwise
+int inPits(struct STRUCT_CARRERA_RESPONSE *carrera_response, int car_number) {
+  return ((get4Bits(((union DATA)carrera_response->data).scts.fuel_bitmask[1]) << 4) + 
+	  get4Bits(((union DATA)carrera_response->data).scts.fuel_bitmask[0]) & car_number) >> (car_number-1);
+}
+
 
 // reset car stati
-void resetCarStati(struct STRUCT_CAR_STATUS *car_stati) {
+void resetCarStati(struct STRUCT_CAR_STATUS car_stati[]) {
 
 int carno=0;
  for (carno=0; carno <= 7; carno ++){
@@ -112,6 +187,9 @@ int carno=0;
    car_stati[carno].current_laptime=0;
    car_stati[carno].fastest_laptime=0;
    car_stati[carno].laps=0;
+   car_stati[carno].fuel_status=0;
+   car_stati[carno].in_pit=0;
+   car_stati[carno].pits=0;
  }
 
 }
@@ -161,9 +239,6 @@ void main (int argc, char **argv){
   // --------------------------------------------------------
   int fd = open (ttyDevice->filename[0], O_RDWR | O_NOCTTY | O_SYNC);
 
-
-
-
  // display error if open no successful
  if (fd < 0)
    {
@@ -184,11 +259,19 @@ void main (int argc, char **argv){
   struct STRUCT_CARRERA_RESPONSE *carrera_response = 
     (struct STRUCT_CARRERA_RESPONSE *)malloc(sizeof (struct STRUCT_CARRERA_RESPONSE));
 
- // create array of cars on track
- struct STRUCT_CAR_STATUS car_stati[8];
- struct STRUCT_CAR_STATUS *pcar_stati = &car_stati;
+  // create array of cars on track
+  struct STRUCT_CAR_STATUS car_stati[8];
+  resetCarStati(car_stati);
 
- resetCarStati(pcar_stati);
+
+  // create track status
+  struct STRUCT_TRACK_STATUS *track_status =(struct STRUCT_TRACK_STATUS *)malloc(sizeof (struct STRUCT_TRACK_STATUS));
+  
+  track_status->lights_status = 0;
+  track_status->fuel_mode = 0;
+  track_status->pitlane_installed = 0;
+  track_status->lapcounter_installed = 0;
+
 
  initDisplay();
 
@@ -266,37 +349,41 @@ void main (int argc, char **argv){
    // ---------------------------------------------------------------
    else if (get4Bits(carrera_response->car_number) == CARRERA_TRACK_STATUS_FLAG) {
 
+     // set fuel status of cars 1-6
+     // set in pit flag to indicate that car is in pits
+     int count=1;
+     for (;count <=6;count ++){ 
+	 car_stati[count].fuel_status = get4Bits(((union DATA)carrera_response->data).scts.fuel_status[count-1]);
 
+	 // if car was in pit stop and has exited
+	 // increment the pits counter
+	 if (car_stati[count].in_pit == 1 && !inPits(carrera_response,car_stati[count].car_number))
+	   car_stati[count].pits++;
 
-     /* printf("Track Status : (Fuel Mode)%i Fuel Status (7)%i (0)%i (4)%i (1)%i (5)%i (2)%i (6)%i (3)%i (FuelBM)%i%i (SLS)%i\n", */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_mode), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[0]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[1]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[2]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[3]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[4]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[5]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[6]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_status[7]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_bitmask[0]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.fuel_bitmask[1]), */
-     /* 	    get4Bits(((union DATA)carrera_response->data).scts.start_light_status) */
+	 car_stati[count].in_pit = inPits(carrera_response, car_stati[count].car_number) ;	     	 
+       }
 
-     /* 	    ); */
+     // set track information (light status, fuel mode)
+     track_status->lights_status = get4Bits(((union DATA)carrera_response->data).scts.start_light_status);
+     track_status->fuel_mode =  get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 3;
 
-
-     
+     // check for installed equipment (pitlane, lapcounter)
+     track_status->pitlane_installed =  (get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 4) >> 2;
+     track_status->lapcounter_installed =  (get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 8) >> 3;     
 
    }
 
    usleep (50000);
 
    displayTimes(car_stati);
+
+   displayTrackStatus(track_status);
+
    refreshDisplay();
 
  }
 
-
+ free(track_status);
 
  closeDisplay();
 
