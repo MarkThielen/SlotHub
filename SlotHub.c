@@ -131,8 +131,10 @@ void main (int argc, char **argv){
   // - cmd line parameters
   // -----------------------------------------------------
   // argtable structure definitions
-  struct arg_file *ttyDevice = arg_file0("d","device","/dev/ttyUSB0","Serial Terminal");
+  struct arg_file *ttyDevice = arg_file0("d","device",NULL,"Serial Terminal");
   struct arg_end *end = arg_end(20);
+
+  
 
   void *argtable[] = { 
     ttyDevice, end      
@@ -141,6 +143,12 @@ void main (int argc, char **argv){
   // check argtable
   if (arg_nullcheck(argtable) != 0)
     printf ("error: insufficient memory\n");
+
+  // set default value for tty device to use
+  // will be overwritten if something was passed
+  // on the cmd line
+  ttyDevice->filename[0] = "/dev/ttyUSB0";
+
 
   // parse argtable
   int parse_errors = arg_parse(argc,argv,argtable);
