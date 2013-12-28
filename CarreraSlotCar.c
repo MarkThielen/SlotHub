@@ -12,12 +12,15 @@
 
 #include <ncurses.h>
 
+#include <argtable2.h>
+
 #include "carrera.h"
 #include "ttyTools.h"
 
 char *portname = "/dev/ttyUSB0";
 char *CARRERA_TIMING_QUERY = "\"?";
 char *CARRERA_CU_FIRMWARE = "\"0";
+
 
 
 
@@ -60,8 +63,6 @@ void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
   for (carno=0; carno <= 7; carno ++)
     //if ( car_stati[carno].active == 1)
       {
-
-	  
 
 	mvprintw(header_top + carno + 1,left_border,"%u",car_stati[carno].car_number);
 
@@ -115,9 +116,6 @@ int carno=0;
 
 }
 
-
-
-
 // -------------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -125,19 +123,43 @@ int carno=0;
 
 
 
-void main (int args, char* argv[]){
-
- struct STRUCT_CARRERA_RESPONSE *carrera_response = 
-   (struct STRUCT_CARRERA_RESPONSE *)malloc(sizeof (struct STRUCT_CARRERA_RESPONSE));
+void main (int argc, char **argv){
 
 
- // open tty
- int fd = open (portname, O_RDWR | O_NOCTTY | O_SYNC);
+  // -----------------------------------------------------
+  // - use argtable 2 to define / check / retrieve 
+  // - cmd line parameters
+  // -----------------------------------------------------
+  // argtable structure definitions
+  struct arg_file *ttyDevice = arg_file0("d","device","/dev/ttyUSB0","Serial Terminal");
+  struct arg_end *end = arg_end(20);
+
+  void *argtable[] = { 
+    ttyDevice, end      
+  };
+
+  // check argtable
+  if (arg_nullcheck(argtable) != 0)
+    printf ("error: insufficient memory\n");
+
+  // parse argtable
+  int parse_errors = arg_parse(argc,argv,argtable);
+
+  if(parse_errors > 0)
+    arg_print_errors(stdout,end,"SlotHub");
+
+  // --------------------------------------------------------
+  // open tty
+  // --------------------------------------------------------
+  int fd = open (ttyDevice->filename[0], O_RDWR | O_NOCTTY | O_SYNC);
+
+
+
 
  // display error if open no successful
  if (fd < 0)
    {
-     printf        ("error %d opening %s: %s", errno, portname, strerror (errno));
+     printf        ("error %d opening %s: %s\n", errno, ttyDevice->filename[0], strerror (errno));
      return;
    }
  
@@ -147,6 +169,12 @@ void main (int args, char* argv[]){
 
  unsigned int prev_timer=0;
  unsigned int laps=0;
+
+
+  // Carrera CU response structure that stores all
+  // response data coming back from the CU
+  struct STRUCT_CARRERA_RESPONSE *carrera_response = 
+    (struct STRUCT_CARRERA_RESPONSE *)malloc(sizeof (struct STRUCT_CARRERA_RESPONSE));
 
  // create array of cars on track
  struct STRUCT_CAR_STATUS car_stati[8];
