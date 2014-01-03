@@ -1,6 +1,18 @@
 class CarreraResponse {
 
+ public:
+  enum type_response_type {UNKNOWN=0, CAR_STATUS, TRACK_STATUS};
+ 
+
  private:
+
+  type_response_type response_type;
+
+  static const int CARRERA_MIN_CAR_NUMBER = 0x1;
+  static const int CARRERA_MAX_CAR_NUMBER = 0x8;
+  static const int  CARRERA_TRACK_STATUS_FLAG = 0xa;
+
+  struct ResponseData {
     char start_code;
     char car_number;
 
@@ -25,24 +37,40 @@ class CarreraResponse {
 	char end_code;
       }scts;
 
-    } data;
+    }data;
 
+  }responseData;
 
+  
  public:
+
+    CarreraResponse(void *data, int length);
+
+    int getResponseType();
 
     char getStartCode();
     
-    char getCarNumber();
+    int getCarNumber();
     
     unsigned int getTimer();
 
+    unsigned int getCarFuelStatus(int car_number);
 
-
-    unsigned int getCarFuelStatus(int carNumber);
+    bool carInPits(int car_number);
 
     unsigned int getFuelMode();
 
     unsigned int getStartLightStatus();
 
+    bool getPitLaneInstalled();
 
-}
+    bool getLapCounterInstalled();
+
+    unsigned int getPitLaneState();
+
+ private:
+    // return lower 4 bits of char as integer
+    int get4Bits(char c);
+
+
+};

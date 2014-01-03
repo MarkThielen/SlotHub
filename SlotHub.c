@@ -6,9 +6,14 @@
 #include <string.h>
 #include <time.h>
 
+#include <cstddef>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+
+#include <map>
 
 #include <ncurses.h>
 
@@ -16,6 +21,9 @@
 
 #include "carrera.h"
 #include "ttyTools.h"
+#include "CarStatus.h"
+#include "TrackStatus.h"
+#include "CarreraResponse.h"
 
 char *portname = "/dev/ttyUSB0";
 char *CARRERA_TIMING_QUERY = "\"?";
@@ -48,10 +56,11 @@ void closeDisplay() {
 }
 
 
+
 // -------------------------------------
 // Display track status information
 // -------------------------------------
-void displayTrackStatus(struct STRUCT_TRACK_STATUS *pTrackStatus) {
+void displayTrackStatus(TrackStatus *pTrackStatus) {
 
  // left border and header position
   int left_border = 5, 
@@ -60,24 +69,28 @@ void displayTrackStatus(struct STRUCT_TRACK_STATUS *pTrackStatus) {
   int col_light_status = 0, 
     col_fuel_mode = 25, 
     col_pitlane_installed = 40, 
-    col_lapcounter_installed = 60;
+    col_lapcounter_installed = 60,
+    col_inPit = 75;
+  
 
   // print header
   attron(A_BOLD);
-  mvprintw(header_top,left_border + col_light_status,"(Lights Status) %u", pTrackStatus->lights_status);
-  mvprintw(header_top,left_border + col_fuel_mode,"(Fuel Mode) %u",pTrackStatus->fuel_mode);  
-  mvprintw(header_top,left_border + col_pitlane_installed,"(Pitlane) %u",pTrackStatus->pitlane_installed); 
-  mvprintw(header_top,left_border + col_lapcounter_installed,"(Lapcounter) %u",pTrackStatus->lapcounter_installed);
+  mvprintw(header_top,left_border + col_light_status,"(Lights Status) %u", pTrackStatus->getStartLightStatus());
+  mvprintw(header_top,left_border + col_fuel_mode,"(Fuel Mode) %u",pTrackStatus->getFuelMode());  
+  mvprintw(header_top,left_border + col_pitlane_installed,"(Pitlane) %u",pTrackStatus->getPitLaneInstalled()); 
+  mvprintw(header_top,left_border + col_lapcounter_installed,"(Lapcounter) %u",pTrackStatus->getLapCounterInstalled());
+  mvprintw(header_top,left_border + col_inPit,"(InPit) %u",pTrackStatus->getInPit());
 
 
   attroff(A_BOLD);
 
 }
 
+
 // -------------------------------------------
 // display car times and status
 // -------------------------------------------
-void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
+void displayTimes(std::map<int,CarStatus*> *mapCarStati) {
 
   // left border and header position
   int left_border = 5, 
@@ -104,39 +117,43 @@ void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
   attroff(A_BOLD);
 
   // print car list
-  int carno=1;
-  for (carno=1; carno <= 7; carno ++)
+  for (std::map<int,CarStatus*>::iterator iterCarStati = mapCarStati->begin() ; iterCarStati != mapCarStati->end(); ++iterCarStati)
       {
+	
+	CarStatus *currentCar = iterCarStati->second;
 
-	mvprintw(header_top + carno + 1,left_border + col_car_number,"%u",car_stati[carno].car_number);
+	int carno = currentCar->getCarNumber();
+	
+
+	mvprintw(header_top + carno + 1,left_border + col_car_number,"%u",currentCar->getCarNumber());
 
 	// show personal best in green
-	if (car_stati[carno].current_laptime > 0 &&  (car_stati[carno].current_laptime == car_stati[carno].fastest_laptime))
+	if (currentCar->getCurrentLapTime() > 0 &&  (currentCar->getCurrentLapTime() == currentCar->getFastestLapTime()))
 	  attron(COLOR_PAIR(2));
 
-	mvprintw(header_top + carno + 1,left_border + col_current_lap,"%u",car_stati[carno].current_laptime);
-	mvprintw(header_top + carno + 1,left_border + col_fastest_lap,"%u",car_stati[carno].fastest_laptime);
+	mvprintw(header_top + carno + 1,left_border + col_current_lap,"%u", currentCar->getCurrentLapTime());
+	mvprintw(header_top + carno + 1,left_border + col_fastest_lap,"%u", currentCar->getFastestLapTime());
 	
 	// turn off personal best in green
 	attroff(COLOR_PAIR(2));
-	mvprintw(header_top + carno + 1,left_border + col_diff,"%u",(car_stati[carno].current_laptime-car_stati[carno].fastest_laptime));
-	mvprintw(header_top + carno + 1,left_border + col_laps,"%u",car_stati[carno].laps);
-	mvprintw(header_top + carno + 1,left_border + col_pits,"%u",car_stati[carno].pits);
+	mvprintw(header_top + carno + 1,left_border + col_diff,"%u",(currentCar->getCurrentLapTime() - currentCar->getFastestLapTime()));
+	mvprintw(header_top + carno + 1,left_border + col_laps,"%u",currentCar->getLaps());
+	mvprintw(header_top + carno + 1,left_border + col_pits,"%u",currentCar->getPitStops());
 	
-	//mvprintw(header_top + carno + 1,left_border + 60,"%u",car_stati[carno].fuel_status);
+	//mvprintw(header_top + carno + 1,left_border + 90,"%u",currentCar->getFuelStatus());
 
 	// -------------------------------------------------------
 	// show fuel bar 0%-100% with moving current
 	// -------------------------------------------------------
 	int fuel_color_pair = 1;
 	// if fuel is 15-8 show green
-	if (car_stati[carno].fuel_status >=8)
+	if (currentCar->getFuelStatus() >=8)
 	  fuel_color_pair = 2;
 	// if fuel 7-2 show red fuel bars
-	else if (car_stati[carno].fuel_status <= 7 && car_stati[carno].fuel_status >= 2 )
+	else if (currentCar->getFuelStatus() <= 7 && currentCar->getFuelStatus() >= 2 )
 	  fuel_color_pair = 4;
 	// if fuel <= 1 show red fuel bars
-	else if (car_stati[carno].fuel_status <= 1)
+	else if (currentCar->getFuelStatus() <= 1)
 	  fuel_color_pair = 3;
 
 	attron(COLOR_PAIR(fuel_color_pair));
@@ -144,7 +161,8 @@ void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
 	int fuelbars=0;
 	for (;fuelbars <= 15;fuelbars++)
 	  mvprintw(header_top + carno + 1, left_border + col_fuel_status + fuelbars,"-");
-	mvprintw(header_top + carno + 1, left_border + col_fuel_status + car_stati[carno].fuel_status ,"+");
+	
+	mvprintw(header_top + carno + 1, left_border + col_fuel_status + currentCar->getFuelStatus() ,"+");
 	
 	attroff(COLOR_PAIR(fuel_color_pair));
 
@@ -154,49 +172,6 @@ void displayTimes(struct STRUCT_CAR_STATUS *car_stati) {
 
 
 
-
-// return lower 4 bits of char as integer
-int get4Bits(char c) { return (int)(c & 0xf);}
-
-// convert Carrera CU timer information into an integer value
-// holding ms
-unsigned int getTimer (struct STRUCT_CARRERA_LAPINFO scl ) {
-  return 
-    (get4Bits(scl.timer[1]) << 28) +
-    (get4Bits(scl.timer[0]) << 24) +
-    (get4Bits(scl.timer[3]) << 20) +
-    (get4Bits(scl.timer[2]) << 16) +
-    (get4Bits(scl.timer[5]) << 12) +
-    (get4Bits(scl.timer[4]) << 8) +
-    (get4Bits(scl.timer[7]) << 4) +
-    (get4Bits(scl.timer[6]));
-}
-
-// function that indicates that passed car number is currently in pits
-// returns 1 if true, 0 otherwise
-int inPits(struct STRUCT_CARRERA_RESPONSE *carrera_response, int car_number) {
-  return ((get4Bits(((union DATA)carrera_response->data).scts.fuel_bitmask[1]) << 4) + 
-	  get4Bits(((union DATA)carrera_response->data).scts.fuel_bitmask[0]) & car_number) >> (car_number-1);
-}
-
-
-// reset car stati
-void resetCarStati(struct STRUCT_CAR_STATUS car_stati[]) {
-
-int carno=0;
- for (carno=0; carno <= 7; carno ++){
-   car_stati[carno].car_number=carno;
-   car_stati[carno].active=0;
-   car_stati[carno].current_laptime=0;
-   car_stati[carno].fastest_laptime=0;
-   car_stati[carno].laps=0;
-   car_stati[carno].fuel_status=0;
-   car_stati[carno].in_pit=0;
-   car_stati[carno].pits=0;
- }
-
-}
-
 // -------------------------------------------------------------
 //
 // -------------------------------------------------------------
@@ -204,7 +179,7 @@ int carno=0;
 
 
 
-void main (int argc, char **argv){
+int main (int argc, char **argv){
 
 
   // -----------------------------------------------------
@@ -246,7 +221,7 @@ void main (int argc, char **argv){
  if (fd < 0)
    {
      printf        ("error %d opening %s: %s\n", errno, ttyDevice->filename[0], strerror (errno));
-     return;
+     return -1;
    }
  
  // set serial connection parameters
@@ -262,20 +237,14 @@ void main (int argc, char **argv){
   struct STRUCT_CARRERA_RESPONSE *carrera_response = 
     (struct STRUCT_CARRERA_RESPONSE *)malloc(sizeof (struct STRUCT_CARRERA_RESPONSE));
 
-  // create array of cars on track
-  struct STRUCT_CAR_STATUS car_stati[8];
-  resetCarStati(car_stati);
+  // use map to store current car stati
+  std::map<int,CarStatus*> mapCarStati;
+
+  // Track Status object
+  TrackStatus *trackStatus = new TrackStatus(); 
 
 
-  // create track status
-  struct STRUCT_TRACK_STATUS *track_status =(struct STRUCT_TRACK_STATUS *)malloc(sizeof (struct STRUCT_TRACK_STATUS));
   
-  track_status->lights_status = 0;
-  track_status->fuel_mode = 0;
-  track_status->pitlane_installed = 0;
-  track_status->lapcounter_installed = 0;
-
-
  initDisplay();
 
  while (getch() != 'q'){
@@ -291,108 +260,76 @@ void main (int argc, char **argv){
    // read data from tty
    int n = read (fd, carrera_response, sizeof (struct STRUCT_CARRERA_RESPONSE) + 1);
 
+   CarreraResponse cr = CarreraResponse(carrera_response,n);
+
    //printf("Buffer : %s : %i %c \n",carrera_response,n, carrera_response->car_number );
 
-
-   
-   // -----------------------------------------------------------------------
+    // -----------------------------------------------------------------------
    // - Calculate and show laptime of last car crossing the finish line 
    // -----------------------------------------------------------------------
-   if (get4Bits(carrera_response->car_number) >= CARRERA_MIN_CAR_NUMBER 
-       && get4Bits(carrera_response->car_number) <= CARRERA_MAX_CAR_NUMBER) {
+   if (cr.getResponseType() == CarreraResponse::CAR_STATUS) {
 
-     unsigned int car_number = get4Bits(carrera_response->car_number);
-
-     // set car information in car status array
-     if ( car_stati[car_number].active == 0 )
-       car_stati[car_number].active = 1;
-
-     car_stati[car_number].laps++;
-
+     // find car in current map of cars
+     std::map<int,CarStatus*>::iterator iterCarStatus = mapCarStati.find(cr.getCarNumber()); 
      
-     // set car number
-     car_stati[car_number].car_number = car_number;
+     // update data for already active car
+     if(iterCarStatus != mapCarStati.end())
+       iterCarStatus->second->updateTimeAndLapStatistics(cr.getTimer());
+     // ----------------------------------------------
+     // set initial data for new car on track
+     // ---------------------------------------------
+     else 
+        // add new car to list of available cars
+       mapCarStati.insert(std::pair<int, CarStatus*>(cr.getCarNumber(), new CarStatus(cr.getCarNumber())));
+         
+   } 
+   // ---------------------------------------------------------------
+   // - collect fuel mode & status, start light status, tower mode 
+   // ---------------------------------------------------------------
+   else if (cr.getResponseType() == CarreraResponse::TRACK_STATUS) {
 
-     // get current CU timer
-     timer = getTimer (((union DATA)carrera_response->data).scl);
+     for (std::map<int,CarStatus*>::iterator iterCarStatus = mapCarStati.begin(); iterCarStatus != mapCarStati.end(); ++iterCarStatus) {
 
-     // -----------------------------------------------------
-     // previous timer should be set after one lap, if yes
-     // we are able to calculate a meaningful lap time
-     // -----------------------------------------------------
-     if(prev_timer > 0) {
-       
-       // laptime is substracting the current timer with the previous
-       // timer
-       laptime = timer - prev_timer;
- 
-       // set current laptime
-       car_stati[car_number].current_laptime = laptime;
+        CarStatus *currentCar = iterCarStatus->second;
 
-       // if last lap time was fastest set fastest laptime to current 
-       if ( (car_stati[car_number].current_laptime < 
-	     car_stati[car_number].fastest_laptime) || car_stati[car_number].fastest_laptime == 0 )
-	 car_stati[car_number].fastest_laptime = 
-	   car_stati[car_number].current_laptime;
-       
-       
-       /* // show Car number, current timer and laptime */
-       /* printf ("Car #%c T(I): %u LT = %u \n", */
-       /* 	  carrera_response->car_number, timer,laptime); */
+	// update fuel status
+	currentCar->setFuelStatus(cr.getCarFuelStatus(currentCar->getCarNumber()));
+
+	// update PitStop Statistics
+	currentCar->updatePitStopStatistics(cr.carInPits(currentCar->getCarNumber()));
 
      }
-     // ----------------------------------------------------------
-     // set previous time to current to calculate next lap time
-     // ----------------------------------------------------------
-     prev_timer = timer;
-   } 
-
-   // ---------------------------------------------------------------
-   // - collect tank mode & status, start light status, tower mode 
-   // ---------------------------------------------------------------
-   else if (get4Bits(carrera_response->car_number) == CARRERA_TRACK_STATUS_FLAG) {
-
-     // set fuel status of cars 1-6
-     // set in pit flag to indicate that car is in pits
-     int count=1;
-     for (;count <=6;count ++){ 
-	 car_stati[count].fuel_status = get4Bits(((union DATA)carrera_response->data).scts.fuel_status[count-1]);
-
-	 // if car was in pit stop and has exited
-	 // increment the pits counter
-	 if (car_stati[count].in_pit == 1 && !inPits(carrera_response,car_stati[count].car_number))
-	   car_stati[count].pits++;
-
-	 car_stati[count].in_pit = inPits(carrera_response, car_stati[count].car_number) ;	     	 
-       }
-
+    
      // ------------------------------------------------------
      // set track information (light status, fuel mode)
-     // ------------------------------------------------------
-     track_status->lights_status = get4Bits(((union DATA)carrera_response->data).scts.start_light_status);
-     track_status->fuel_mode =  get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 3;
+     // ------------------------------------------------------ 
+     trackStatus->setStartLightStatus(cr.getStartLightStatus());
+     trackStatus->setFuelMode(cr.getFuelMode());
+
 
      // ------------------------------------------------------
      // check for installed equipment (pitlane, lapcounter)
      // ------------------------------------------------------
-     track_status->pitlane_installed =  (get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 4) >> 2;
-     track_status->lapcounter_installed =  (get4Bits(((union DATA)carrera_response->data).scts.fuel_mode) & 8) >> 3;     
+     trackStatus->setPitLaneInstalled(cr.getPitLaneInstalled());
+     trackStatus->setLapCounterInstalled(cr.getLapCounterInstalled());
+
+     trackStatus->setInPit(cr.getPitLaneState());
 
    }
 
+
    usleep (50000);
 
-   displayTimes(car_stati);
-
-   displayTrackStatus(track_status);
+   displayTimes(&mapCarStati);
+   displayTrackStatus(trackStatus);
 
    refreshDisplay();
 
  }
 
- free(track_status);
-
  closeDisplay();
+
+ return 0;
 
 } 
 

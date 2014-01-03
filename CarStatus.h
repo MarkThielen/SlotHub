@@ -1,16 +1,23 @@
+#include "pb/CarStatusMessage.pb.h"
+
+
 class CarStatus {
 
 private:
-  unsigned int car_number;
-  unsigned int current_laptime;
-  unsigned int fastest_laptime;
-  unsigned int laps;
-  unsigned int fuel_status;
-  bool active;
-  bool in_pit;
-  unsigned int pit_stops;
+  
+  SlotHub::CarStatusMessage *csm;
 
+  unsigned int previous_timer;
+
+ 
 public:
+
+  CarStatus();
+  
+  CarStatus(unsigned int car_number);
+
+
+  ~CarStatus();
 
   unsigned int getCarNumber();
   void setCarNumber(unsigned int carno);
@@ -23,6 +30,7 @@ public:
 
   unsigned int getLaps();
   void setLaps(unsigned int laps);
+  void incrementLaps();
 
   unsigned int getFuelStatus();
   void setFuelStatus(unsigned int fuelStatus);
@@ -31,16 +39,25 @@ public:
   void setPitStops(unsigned stops);
   void incrementPitStops();
 
-
   bool getActive();
   void setActive(bool flag);
  
   bool getInPit();
   bool setInPit(bool flag);
 
+  unsigned int getCurrentTimer();
+  void setCurrentTimer(unsigned int timer);
+
+  void updateTimeAndLapStatistics(unsigned int timer);
+  void updatePitStopStatistics(bool currentlyInPits);
 
 
-}
+ private:
+
+  unsigned int getPreviousTimer();
+  void setPreviousTimer(unsigned int timer);
+
+};
 
 
 
