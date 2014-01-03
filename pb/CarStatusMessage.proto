@@ -1,0 +1,16 @@
+package SlotHub;
+
+message CarStatusMessage {
+  required int32 car_number		= 1;
+  required int32 current_laptime 	= 2;
+  required int32 fastest_laptime 	= 3;
+  required int32 laps 			= 4;
+  required int32 fuel_status 		= 5;
+  required bool active 			= 6;
+  required bool in_pit 			= 7;
+  required int32 pit_stops 		= 8;
+}
+
+
+
+
