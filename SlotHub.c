@@ -16,10 +16,8 @@
 #include <map>
 
 #include <ncurses.h>
-
 #include <argtable2.h>
 
-#include "carrera.h"
 #include "ttyTools.h"
 #include "CarStatus.h"
 #include "TrackStatus.h"
@@ -231,11 +229,7 @@ int main (int argc, char **argv){
  unsigned int prev_timer=0;
  unsigned int laps=0;
 
-
-  // Carrera CU response structure that stores all
-  // response data coming back from the CU
-  struct STRUCT_CARRERA_RESPONSE *carrera_response = 
-    (struct STRUCT_CARRERA_RESPONSE *)malloc(sizeof (struct STRUCT_CARRERA_RESPONSE));
+  char *buffer = (char *)malloc(sizeof (struct CarreraResponse::ResponseData));
 
   // use map to store current car stati
   std::map<int,CarStatus*> mapCarStati;
@@ -255,12 +249,12 @@ int main (int argc, char **argv){
    write (fd, CARRERA_TIMING_QUERY, strlen(CARRERA_TIMING_QUERY));       
 
    // reset memory structure
-   memset(carrera_response,0,sizeof(struct STRUCT_CARRERA_RESPONSE));
+   memset(buffer,0,sizeof(struct CarreraResponse::ResponseData));
 
    // read data from tty
-   int n = read (fd, carrera_response, sizeof (struct STRUCT_CARRERA_RESPONSE) + 1);
+   int n = read (fd, buffer, sizeof (struct CarreraResponse::ResponseData) + 1);
 
-   CarreraResponse cr = CarreraResponse(carrera_response,n);
+   CarreraResponse cr = CarreraResponse(buffer,n);
 
    //printf("Buffer : %s : %i %c \n",carrera_response,n, carrera_response->car_number );
 
@@ -328,6 +322,8 @@ int main (int argc, char **argv){
  }
 
  closeDisplay();
+ 
+ free(buffer);
 
  return 0;
 
