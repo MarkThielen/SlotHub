@@ -21,16 +21,18 @@
     char end_code;
   };
 
+  union DATA {
+      struct STRUCT_CARRERA_LAPINFO scl;
+      struct STRUCT_CARRERA_TRACK_STATUS scts;
+  };
+
 
   struct STRUCT_CARRERA_RESPONSE {
     char start_code;
     char car_number;
 
-    union DATA {
-      struct STRUCT_CARRERA_LAPINFO scl;
-      struct STRUCT_CARRERA_TRACK_STATUS scts;
-    } data;
- 
+    union DATA data;
+
   };
 
 
@@ -55,6 +57,9 @@ struct STRUCT_TRACK_STATUS {
   unsigned int pitlane_installed;
   unsigned int lapcounter_installed;
 };
+
+
+
 
 char CARRERA_COMMAND = 0x22;
 char CARRERA_LAPINFO = 0x3f;
