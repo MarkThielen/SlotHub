@@ -34,3 +34,7 @@ Track Status Information include
 + Laptime connected flag
 
 It works pretty well so far. There are a lot of things to optimize, especially the code and some weird behavior when the terminal window size is changed. Happy with the progress so far.
+
+
+01/04/2014
+Functionality as described above but have encapsulated functionalites into classes which works pretty well and makes code more readable. Also added Protocol Buffers into some status classes to be able to serialize and send the data to clients via a message queue. Looked ad 0MQ which seems like it can do the job. With this it should be possible to send TrackStatus information, Session/Race Status but also detail CarStatus/Information to connected clients. One of the next steps will be to decouple the display through a local message queue.
