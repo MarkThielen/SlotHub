@@ -1,4 +1,4 @@
-CarreraSlotCar
+SlotHub
 ==============
 
 This is for Carrera Digital 124/132 systems with Control Unit and PC Unit (or other working cable connection). The overall goal is to show car lap times for training, qualify and race on one screen. Furhter iterations might add other functionality like 
