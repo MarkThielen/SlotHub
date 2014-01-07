@@ -1,18 +1,12 @@
+#pragma once
+
+
 class CarreraResponse {
 
  public:
   enum type_response_type {UNKNOWN=0, CAR_STATUS, TRACK_STATUS};
  
-
- private:
-
-  type_response_type response_type;
-
-  static const int CARRERA_MIN_CAR_NUMBER = 0x1;
-  static const int CARRERA_MAX_CAR_NUMBER = 0x8;
-  static const int  CARRERA_TRACK_STATUS_FLAG = 0xa;
-
-  struct ResponseData {
+   struct ResponseData {
     char start_code;
     char car_number;
 
@@ -39,7 +33,19 @@ class CarreraResponse {
 
     }data;
 
-  }responseData;
+  };
+
+
+ private:
+
+  type_response_type response_type;
+
+  static const int CARRERA_MIN_CAR_NUMBER = 0x1;
+  static const int CARRERA_MAX_CAR_NUMBER = 0x8;
+  static const int  CARRERA_TRACK_STATUS_FLAG = 0xa;
+
+ 
+  struct ResponseData responseData;
 
   
  public:

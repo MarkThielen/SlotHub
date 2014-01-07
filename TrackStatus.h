@@ -1,3 +1,5 @@
+#pragma once
+
 #include "pb/TrackStatusMessage.pb.h"
 
 

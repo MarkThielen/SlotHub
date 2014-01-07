@@ -1,3 +1,5 @@
+#pragma once
+
 #include "pb/CarStatusMessage.pb.h"
 
 
