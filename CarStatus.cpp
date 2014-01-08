@@ -112,6 +112,8 @@ void CarStatus::updateTimeAndLapStatistics(unsigned int timer) {
 
 }
 
+SlotHub::CarStatusMessage* CarStatus::getCarStatusMessage() { return csm; }
+
 
 // --------------------------------------------------------------
 // -

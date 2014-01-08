@@ -12,9 +12,12 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include <exception>
+#include <zmq.hpp>
 
+#include <exception>
 #include <map>
+#include <thread>
+
 
 #include "CarreraResponse.h"
 #include "CarStatus.h"
@@ -49,6 +52,9 @@ ControlUnit::ControlUnit(std::string ttyToUse){
   set_interface_attribs (fileDescriptor, B19200 , 0);  // set speed to 115,200 bps, 8n1 (no parity)
   set_blocking (fileDescriptor, 0);                // set no blocking
 
+  // init the message queue
+  initMessageQueue();
+
 }
 
 // -------------------------------------------------------------
@@ -58,7 +64,55 @@ ControlUnit::~ControlUnit(){
 
   close(fileDescriptor);
 
+  delete(publisher);
+  delete(context);
+
 }
+
+// -------------------------------------------------------------
+// - Init Message Queue
+// -------------------------------------------------------------
+void ControlUnit::initMessageQueue() {
+
+  context = new zmq::context_t(1);
+  publisher = new zmq::socket_t(*context, ZMQ_PUB);
+
+  publisher->bind("tcp://*:5556");
+  publisher->bind("ipc://control_unit.ipc");
+
+}
+
+
+// -------------------------------------------------------------
+// - send Car Status Message to Queue
+// -------------------------------------------------------------
+void ControlUnit::sendCarStatusMessage(SlotHub::CarStatusMessage *csm) {
+
+  char buffer[1024];
+
+  csm->SerializeToArray(buffer,csm->ByteSize());
+
+
+  publisher->send(buffer,csm->ByteSize());
+
+}
+
+
+// -------------------------------------------------------------
+// - send Track Status Message to Queue
+// -------------------------------------------------------------
+void ControlUnit::sendTrackStatusMessage(SlotHub::TrackStatusMessage *tsm) {
+
+  char buffer[1024];
+
+  tsm->SerializeToArray(buffer,tsm->ByteSize());
+
+  publisher->send(buffer,tsm->ByteSize());
+
+
+}
+
+
 
 // -------------------------------------------------------------
 // - Return file descriptor connecting to CU
@@ -91,6 +145,8 @@ void ControlUnit::run(){
   
   std::string CARRERA_TIMING_QUERY = std::string("\"?");
   std::string CARRERA_CU_FIRMWARE = std::string("\"0");
+
+  std::chrono::duration<int, std::milli> sleep_duration(66000);
 
   unsigned int prev_timer=0;
   unsigned int laps=0;
@@ -171,9 +227,16 @@ void ControlUnit::run(){
       trackStatus->setInPit(cr.getPitLaneState());
       
     }
-    
+
+    // ---------------------------------------------------
+    // - send updated car information to message queue
+    // ---------------------------------------------------
+    for (std::map<int,CarStatus*>::iterator iterCarStatus = mapCarStati.begin(); iterCarStatus != mapCarStati.end(); ++iterCarStatus) 
+      sendCarStatusMessage(iterCarStatus->second->getCarStatusMessage());
+      
     // sleep a little
-   usleep (50000);
+    std::this_thread::sleep_for(sleep_duration);
+   
 
  }
 

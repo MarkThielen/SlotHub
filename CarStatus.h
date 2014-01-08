@@ -53,6 +53,7 @@ public:
   void updateTimeAndLapStatistics(unsigned int timer);
   void updatePitStopStatistics(bool currentlyInPits);
 
+  SlotHub::CarStatusMessage *getCarStatusMessage();
 
  private:
 

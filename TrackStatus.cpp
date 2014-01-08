@@ -12,8 +12,8 @@ void TrackStatus::setPitLaneInstalled(bool state){tsm->set_pitlane_installed(sta
 bool TrackStatus::getLapCounterInstalled(){return tsm->lap_counter_installed();}
 void TrackStatus::setLapCounterInstalled(bool state){tsm->set_lap_counter_installed(state);}
 
-unsigned int TrackStatus::getInPit(){return inPit;}
-void TrackStatus::setInPit(unsigned int pitState) {inPit = pitState;}
+unsigned int TrackStatus::getInPit(){return tsm->in_pit();}
+void TrackStatus::setInPit(unsigned int pitState) {tsm->set_in_pit(pitState);}
 
 TrackStatus::TrackStatus(){
 

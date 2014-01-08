@@ -7,13 +7,13 @@ PB_DIRS=./pb
 PB_FLAGS=--cpp_out=$(PB_DIRS)
 
 LDFLAGS = 
-LDLIBS = -lncurses -largtable2 -lprotobuf
+LDLIBS = -lncurses -largtable2 -lprotobuf -lzmq
 DEBUGFLAGS=-ggdb
 
 all: clean ProtoBuf SlotHub
 
 SlotHub: ProtoBuf
-	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(DEBUGFLAGS) SlotHub.c ttyTools.c ControlUnit.cpp CarStatus.cpp TrackStatus.cpp CarreraResponse.cpp pb/TrackStatusMessage.pb.cc pb/CarStatusMessage.pb.cc -o SlotHub
+	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(DEBUGFLAGS) SlotHub.c ttyTools.c ControlUnit.cpp TextDisplay.cpp CarStatus.cpp TrackStatus.cpp CarreraResponse.cpp pb/TrackStatusMessage.pb.cc pb/CarStatusMessage.pb.cc -o SlotHub
 
 ProtoBuf:
 	$(PB) -I$(PB_DIRS) $(PB_FLAGS) $(PB_DIRS)/CarStatusMessage.proto

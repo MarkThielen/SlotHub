@@ -7,11 +7,11 @@ class TrackStatus {
 
 
  private:
-  unsigned int start_lights_status;
-  unsigned int fuel_mode;
-  unsigned int inPit;
-  bool pitlane_installed;
-  bool lap_counter_installed;
+  /* unsigned int start_lights_status; */
+  /* unsigned int fuel_mode; */
+  /* unsigned int inPit; */
+  /* bool pitlane_installed; */
+  /* bool lap_counter_installed; */
   
 
   SlotHub::TrackStatusMessage *tsm;

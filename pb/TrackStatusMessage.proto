@@ -8,6 +8,6 @@ message TrackStatusMessage {
   required int32 fuel_mode 	   	= 2;
   required bool pitlane_installed	= 3;
   required bool lap_counter_installed	= 4;
-
+  required int32 in_pit			= 5;
 
 }
