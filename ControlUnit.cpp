@@ -17,6 +17,7 @@
 #include <exception>
 #include <map>
 #include <thread>
+#include <iostream>
 
 
 #include "CarreraResponse.h"
@@ -92,7 +93,6 @@ void ControlUnit::sendCarStatusMessage(SlotHub::CarStatusMessage *csm) {
 
   csm->SerializeToArray(buffer,csm->ByteSize());
 
-
   publisher->send(buffer,csm->ByteSize());
 
 }
@@ -146,7 +146,7 @@ void ControlUnit::run(){
   std::string CARRERA_TIMING_QUERY = std::string("\"?");
   std::string CARRERA_CU_FIRMWARE = std::string("\"0");
 
-  std::chrono::duration<int, std::milli> sleep_duration(66000);
+  std::chrono::duration<int, std::milli> sleep_duration(500);
 
   unsigned int prev_timer=0;
   unsigned int laps=0;
@@ -171,7 +171,7 @@ void ControlUnit::run(){
     memset(buffer,0,sizeof(struct CarreraResponse::ResponseData));
     
     // read data from tty
-    int n = read (getFileDescriptor(), buffer, sizeof (struct CarreraResponse::ResponseData) + 1);
+    int n = read (getFileDescriptor(), buffer, sizeof (struct CarreraResponse::ResponseData) );
     
     CarreraResponse cr = CarreraResponse(buffer,n);
 
@@ -231,9 +231,15 @@ void ControlUnit::run(){
     // ---------------------------------------------------
     // - send updated car information to message queue
     // ---------------------------------------------------
-    for (std::map<int,CarStatus*>::iterator iterCarStatus = mapCarStati.begin(); iterCarStatus != mapCarStati.end(); ++iterCarStatus) 
+    for (std::map<int,CarStatus*>::iterator iterCarStatus = mapCarStati.begin(); iterCarStatus != mapCarStati.end(); ++iterCarStatus) {
+     
+
+      //      std::cout << iterCarStatus->second->getCarNumber() << std::endl;
+
       sendCarStatusMessage(iterCarStatus->second->getCarStatusMessage());
       
+    }
+
     // sleep a little
     std::this_thread::sleep_for(sleep_duration);
    

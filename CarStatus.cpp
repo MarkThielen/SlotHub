@@ -116,7 +116,7 @@ SlotHub::CarStatusMessage* CarStatus::getCarStatusMessage() { return csm; }
 
 
 // --------------------------------------------------------------
-// -
+// - Constructor 
 // -
 // --------------------------------------------------------------
 CarStatus::CarStatus(unsigned int new_car_number) {
@@ -141,6 +141,85 @@ CarStatus::CarStatus(unsigned int new_car_number) {
   setInPit(false);
   
 }
+
+
+// --------------------------------------------------------------
+// - Constructor 
+// -
+// --------------------------------------------------------------
+CarStatus::CarStatus(SlotHub::CarStatusMessage *new_csm) {
+
+  // init protocol buffer message
+  csm = new SlotHub::CarStatusMessage();
+
+  // initialize timer
+  setPreviousTimer(0);
+
+  // update attributes
+  updateCarStatusFromMessage(new_csm);
+
+}
+
+
+// --------------------------------------------------------------
+// -
+// -
+// --------------------------------------------------------------
+void CarStatus::updateCarStatusFromMessage(SlotHub::CarStatusMessage *new_csm){
+
+  // set Car Number
+  setCarNumber(new_csm->car_number());
+  
+  // reset other information
+  setCurrentLapTime(new_csm->current_laptime());
+  setFastestLapTime(new_csm->fastest_laptime());
+  setLaps(new_csm->laps());
+  setFuelStatus(new_csm->fuel_status());
+  setPitStops(new_csm->pit_stops());
+  setActive(new_csm->active());
+  setInPit(new_csm->in_pit());
+
+}
+
+
+// --------------------------------------------------------------
+// -
+// -
+// --------------------------------------------------------------
+void CarStatus::updateCarStatus(CarStatus *carStatus){
+
+  // set Car Number
+  setCarNumber(carStatus->getCarNumber());
+  
+  // reset other information
+  setCurrentLapTime(carStatus->getCurrentLapTime());
+  setFastestLapTime(carStatus->getFastestLapTime());
+  setLaps(carStatus->getLaps());
+  setFuelStatus(carStatus->getFuelStatus());
+  setPitStops(carStatus->getPitStops());
+  setActive(carStatus->getActive());
+  setInPit(carStatus->getInPit());
+
+}
+
+
+
+// --------------------------------------------------------------
+// -
+// -
+// --------------------------------------------------------------
+CarStatus::CarStatus(CarStatus *carStatus){ 
+  
+  // init protocol buffer message
+  csm = new SlotHub::CarStatusMessage();
+
+  // initialize timer
+  setPreviousTimer(0);
+
+  updateCarStatus(carStatus); 
+
+}
+
 
 // --------------------------------------------------------------
 // -

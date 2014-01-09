@@ -1,6 +1,7 @@
 #include <thread>
 #include <map>
 #include <ncurses.h>
+#include <thread>
 
 #include "TextDisplay.h"
 #include "CarStatus.h"
@@ -8,7 +9,121 @@
 
 
 
+
+
+
+// -------------------------------------------------------------
+// - create a thread and start the main logic
+// -------------------------------------------------------------
+std::thread TextDisplay::start() {
+
+  return std::thread([this]{this->run();});
+
+}
+
+
+// -------------------------------------------------------------
+// - main loop logic
+// -------------------------------------------------------------
+void TextDisplay::run(){
+
+  initDisplay();
+
+  while (getch() != 'q') {
+   
+    CarStatus *cs = receiveCarStatus();
+
+    // find car in current map of cars
+    std::map<int,CarStatus*>::iterator iterCarStatus = mapCarStati.find(cs->getCarNumber()); 
+    
+    // update data for already active car
+    if(iterCarStatus != mapCarStati.end()) 
+      iterCarStatus->second->updateCarStatus(cs);
+    // ----------------------------------------------
+    // set initial data for new car on track
+    // ---------------------------------------------
+    else 
+      // add new car to list of available cars
+      mapCarStati.insert(std::pair<int, CarStatus*>(cs->getCarNumber(), new CarStatus(cs)));
+    
+    // delete object
+    delete(cs);
+
+    // show car timings on screen
+    displayCarTimings(&mapCarStati);
+
+    // refresh the display
+    refreshDisplay();
+
+  }
+  // close display after exit
+  closeDisplay();
+}
+
+
+
+// -------------------------------------------------------------
+// - Constructor
+// -------------------------------------------------------------
+TextDisplay::TextDisplay(){
+
+
+  initMessageQueue();
+  
+  
+
+}
+
+
+// -------------------------------------------------------------
+// - Destructor
+// -------------------------------------------------------------
+TextDisplay::~TextDisplay(){
+
+  
+}
+
+
+// -------------------------------------------------------------
+// - receive CarStatus from Message Queue
+// -------------------------------------------------------------
+CarStatus* TextDisplay::receiveCarStatus(){
+
+  zmq::message_t msg_cardata;
+
+  SlotHub::CarStatusMessage *csm = new SlotHub::CarStatusMessage();
+
+  subscriber->recv(&msg_cardata);
+
+  csm->ParseFromArray(msg_cardata.data(), msg_cardata.size());
+
+  return new CarStatus(csm);
+
+} 
+
+
+// -------------------------------------------------------------
+// - Init Message Queue
+// -------------------------------------------------------------
+void TextDisplay::initMessageQueue() {
+
+  context = new zmq::context_t(1);
+  subscriber = new zmq::socket_t(*context, ZMQ_SUB);
+
+  subscriber->connect("tcp://localhost:5556");
+
+  subscriber->setsockopt(ZMQ_SUBSCRIBE,NULL,0);
+
+  //subscriber->connect("ipc://control_unit.ipc");
+
+}
+
+
+// -------------------------------------------------------------
+// - Init Display
+// -------------------------------------------------------------
 void TextDisplay::initDisplay() {
+
   WINDOW *mainWindow = initscr();
   start_color();
   init_pair(1,COLOR_WHITE,COLOR_BLACK);
@@ -21,12 +136,20 @@ void TextDisplay::initDisplay() {
   raw();
   noecho();
   timeout(10);
+
 }
 
+
+// -------------------------------------------------------------
+// - refresh display
+// -------------------------------------------------------------
 void TextDisplay::refreshDisplay() {
   refresh();
 }
 
+// -------------------------------------------------------------
+// - Close Display
+// -------------------------------------------------------------
 void TextDisplay::closeDisplay() {
   endwin();
 }

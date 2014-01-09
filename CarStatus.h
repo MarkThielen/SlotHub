@@ -18,8 +18,18 @@ public:
   
   CarStatus(unsigned int car_number);
 
+  CarStatus(CarStatus *carStatus);
+
+  CarStatus(SlotHub::CarStatusMessage *new_csm);
 
   ~CarStatus();
+
+  void updateCarStatusFromMessage(SlotHub::CarStatusMessage *new_csm);
+  
+
+
+  void updateCarStatus(CarStatus *carStatus);
+
 
   unsigned int getCarNumber();
   void setCarNumber(unsigned int carno);
