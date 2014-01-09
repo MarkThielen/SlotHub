@@ -12,6 +12,10 @@ This is for Carrera Digital 124/132 systems with Control Unit and PC Unit (or ot
 
 There is a lot to learn. Most information I got so far is from Slotbär (www.slotbaer.de) who has reverse engineered the Carrera protocols.
 
+
+01/09/2014 
+ZeroMQ and ProtocolBuffer implementation works in experimental mode. Multiple TextDisplay clients can be started to consume the information send from ControlUnit.
+
 01/04/2014
 Functionality as described in last update but have encapsulated functionalites into c++ classes which works pretty well and makes code more readable. Also added Protocol Buffers into some status classes to be able to serialize and send the data to clients via a message queue. Looked ad 0MQ which seems like it can do the job. With this it should be possible to send TrackStatus information, Session/Race Status but also detail CarStatus/Information to connected clients. One of the next steps will be to decouple the display through a local message queue.
 
