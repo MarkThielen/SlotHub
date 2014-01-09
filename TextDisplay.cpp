@@ -52,6 +52,10 @@ void TextDisplay::run(){
     // show car timings on screen
     displayCarTimings(&mapCarStati);
 
+
+    // display status bar
+    displayStatusBar();
+    
     // refresh the display
     refreshDisplay();
 
@@ -61,14 +65,20 @@ void TextDisplay::run(){
 }
 
 
+std::string TextDisplay::getServerAddress() {return std::string(serverAddress);}
+
+void TextDisplay::setServerAddress(std::string connectTo){serverAddress = std::string(connectTo);}
+
 
 // -------------------------------------------------------------
 // - Constructor
 // -------------------------------------------------------------
-TextDisplay::TextDisplay(){
+TextDisplay::TextDisplay(std::string connectTo){
 
+  setServerAddress(connectTo);
+  
 
-  initMessageQueue();
+  initMessageQueue(getServerAddress());
   
   
 
@@ -105,16 +115,16 @@ CarStatus* TextDisplay::receiveCarStatus(){
 // -------------------------------------------------------------
 // - Init Message Queue
 // -------------------------------------------------------------
-void TextDisplay::initMessageQueue() {
+void TextDisplay::initMessageQueue(std::string connectTo) {
 
   context = new zmq::context_t(1);
   subscriber = new zmq::socket_t(*context, ZMQ_SUB);
 
-  subscriber->connect("tcp://localhost:5556");
+  subscriber->connect(getServerAddress().c_str());
 
   subscriber->setsockopt(ZMQ_SUBSCRIBE,NULL,0);
 
-  //subscriber->connect("ipc://control_unit.ipc");
+
 
 }
 
@@ -136,6 +146,12 @@ void TextDisplay::initDisplay() {
   raw();
   noecho();
   timeout(10);
+
+  // display status bar
+  displayStatusBar();
+
+  // refresh Display
+  refreshDisplay();
 
 }
 
@@ -185,8 +201,20 @@ void TextDisplay::displayTrackStatus(TrackStatus *pTrackStatus) {
 
 }
 
+// -------------------------------------------
+// - show some status information at the 
+// - bottom of the screen
+// -------------------------------------------
+void TextDisplay::displayStatusBar() {
 
+  int rows, cols;
+  
+  getmaxyx(stdscr,rows,cols);
+  
+  mvprintw(rows-1,0,"Server : %s", getServerAddress().c_str());
+  mvprintw(rows-1,cols-12,"'q' to exit", getServerAddress().c_str());
 
+}
 
 
 // -------------------------------------------
@@ -233,14 +261,14 @@ void TextDisplay::displayCarTimings(std::map<int,CarStatus*> *mapCarStati) {
 	if (currentCar->getCurrentLapTime() > 0 &&  (currentCar->getCurrentLapTime() == currentCar->getFastestLapTime()))
 	  attron(COLOR_PAIR(2));
 
-	mvprintw(header_top + carno + 1,left_border + col_current_lap,"%u", currentCar->getCurrentLapTime());
-	mvprintw(header_top + carno + 1,left_border + col_fastest_lap,"%u", currentCar->getFastestLapTime());
+	mvprintw(header_top + carno + 1,left_border + col_current_lap,"%-6u", currentCar->getCurrentLapTime());
+	mvprintw(header_top + carno + 1,left_border + col_fastest_lap,"%-6u", currentCar->getFastestLapTime());
 	
 	// turn off personal best in green
 	attroff(COLOR_PAIR(2));
-	mvprintw(header_top + carno + 1,left_border + col_diff,"%u",(currentCar->getCurrentLapTime() - currentCar->getFastestLapTime()));
-	mvprintw(header_top + carno + 1,left_border + col_laps,"%u",currentCar->getLaps());
-	mvprintw(header_top + carno + 1,left_border + col_pits,"%u",currentCar->getPitStops());
+	mvprintw(header_top + carno + 1,left_border + col_diff,"%-6u",(currentCar->getCurrentLapTime() - currentCar->getFastestLapTime()));
+	mvprintw(header_top + carno + 1,left_border + col_laps,"%-5u",currentCar->getLaps());
+	mvprintw(header_top + carno + 1,left_border + col_pits,"%-3u",currentCar->getPitStops());
 	
 	//mvprintw(header_top + carno + 1,left_border + 90,"%u",currentCar->getFuelStatus());
 

@@ -17,6 +17,8 @@ class TextDisplay {
 
   std::map<int,CarStatus*> mapCarStati;
 
+  std::string serverAddress;
+
 
   void initDisplay();
   void refreshDisplay();
@@ -26,8 +28,9 @@ class TextDisplay {
 
   void displayCarTimings( std::map<int,CarStatus*> *mapCarStati );
 
-  void initMessageQueue();
+  void initMessageQueue(std::string serverAddressToConnect);
 
+  void displayStatusBar();
   
   CarStatus* receiveCarStatus();
   
@@ -39,7 +42,7 @@ class TextDisplay {
   // -------------------------------------------------------------
   // - Constructor
   // -------------------------------------------------------------
-  TextDisplay();
+  TextDisplay(std::string connectTo);
 
 
   
@@ -48,7 +51,10 @@ class TextDisplay {
   // -------------------------------------------------------------
   ~TextDisplay();
 
-  
+  void setServerAddress(std::string connectTo);
+  std::string getServerAddress();
+
+
   std::thread start();
 
 
