@@ -28,13 +28,15 @@
 // -------------------------------------------------------------
 // - Constructor
 // -------------------------------------------------------------
-ControlUnit::ControlUnit(std::string ttyToUse){
+ControlUnit::ControlUnit(std::string ttyToUse, std::string bindAddressToUse){
 
 
   fileDescriptor = -1;
 
-  tty = std::string(ttyToUse);
+  stop_execution = false;
 
+  tty = std::string(ttyToUse);
+  bindAddress = std::string(bindAddressToUse);
   
 
   // --------------------------------------------------------
@@ -54,7 +56,7 @@ ControlUnit::ControlUnit(std::string ttyToUse){
   set_blocking (fileDescriptor, 0);                // set no blocking
 
   // init the message queue
-  initMessageQueue();
+  initMessageQueue(getBindAddress());
 
 }
 
@@ -73,13 +75,16 @@ ControlUnit::~ControlUnit(){
 // -------------------------------------------------------------
 // - Init Message Queue
 // -------------------------------------------------------------
-void ControlUnit::initMessageQueue() {
+void ControlUnit::initMessageQueue(std::string bindAddressToUse) {
 
   context = new zmq::context_t(1);
   publisher = new zmq::socket_t(*context, ZMQ_PUB);
 
-  publisher->bind("tcp://*:5556");
-  publisher->bind("ipc://control_unit.ipc");
+  // bind to address
+  publisher->bind(bindAddressToUse.c_str());
+ 
+  if (bindAddressToUse.compare("ipc://SlotHub.ipc") != 0)
+    publisher->bind("ipc://SlotHub.ipc");
 
 }
 
@@ -126,6 +131,16 @@ int ControlUnit::getFileDescriptor() {
 
 }
 
+// -------------------------------------------------------------
+// - return bind address
+// -------------------------------------------------------------
+std::string ControlUnit::getBindAddress(){return std::string(bindAddress);}
+
+// -------------------------------------------------------------
+// - set bind address
+// -------------------------------------------------------------
+void ControlUnit::setBindAddress(std::string bindAddressToUse){bindAddress = std::string(bindAddressToUse);}
+
 
 // -------------------------------------------------------------
 // - create a thread and start the main logic
@@ -136,6 +151,8 @@ std::thread ControlUnit::start() {
 
 }
 
+
+void ControlUnit::stop(){stop_execution = true;}
 
 // -------------------------------------------------------------
 // - main loop logic
@@ -160,7 +177,7 @@ void ControlUnit::run(){
   TrackStatus *trackStatus = new TrackStatus(); 
 
 
-  while (true){
+  while (!stop_execution){
 
     unsigned int timer = 0, laptime = 0;
 
