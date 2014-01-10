@@ -18,7 +18,7 @@ SlotHub: ProtoBuf
 ProtoBuf:
 	$(PB) -I$(PB_DIRS) $(PB_FLAGS) $(PB_DIRS)/CarStatusMessage.proto
 	$(PB) -I$(PB_DIRS) $(PB_FLAGS) $(PB_DIRS)/TrackStatusMessage.proto	
-
+	$(PB) -I$(PB_DIRS) $(PB_FLAGS) $(PB_DIRS)/SessionMessage.proto
 
 CarStatus:
 	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(DEBUGFLAGS) CarStatus.cpp

@@ -2,6 +2,8 @@
 
 #include <string>
 
+#include "CarStatus.h"
+
 class Session {
 
  public:
@@ -9,14 +11,25 @@ class Session {
   enum session_type {TRAINING, QUALIFYING, RACE};
   enum session_status {RUNNING, PAUSED, STOPPED, FINISH, SAFETY_CAR};
   enum session_rule_type {TIME_BASED, LAP_BASED};
-  enum pit_rules {NONE, MINIMUM_STOPS};
+  enum session_pit_rule {NONE, MINIMUM_STOPS};
 
 
  private:
 
+  
+  // this script checks if the session is sane and also calculates the current
+  // car positioning based on the session_type and rule_type
   std::string session_rule_script;
+  
+  // this script checks whether cars have followed the pit rule, if not
+  // cars lap counting or timer might be paused until rule was obeyed
   std::string pit_rule_script;
 
+  session_type type;
+  session_status status;
+  session_rule_type rule_type;
+  session_pit_rule pit_rule;
+  
 
   unsigned int time_elapsed;
   unsigned int time_set;
@@ -26,8 +39,18 @@ class Session {
 
   unsigned int start_time;
 
+  std::map<int,CarStatus*> standings;
+
 
  public:
+
+  std::map<int,CarStatus*> getStandings();
+  void setStandings(std::map<int,CarStatus*> current_standings);
+  
+  // updates the current standings based on the car status 
+  // that was passed. Normally that would happen inside the
+  // ControlUnit when a car finished a lap.
+  void updateStandigs(CarStatus *status);
 
   void setSessionType(session_type type);
   session_type getSessionType();
