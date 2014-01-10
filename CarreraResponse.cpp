@@ -69,7 +69,7 @@ unsigned int CarreraResponse::getTimer(){
 // -
 // -----------------------------------------------------------------------
 unsigned int CarreraResponse::getCarFuelStatus(int carNumber){
-  get4Bits(responseData.data.scts.fuel_status[carNumber - 1]);
+  return get4Bits(responseData.data.scts.fuel_status[carNumber - 1]);
 }
 
 

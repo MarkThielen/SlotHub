@@ -61,7 +61,7 @@ void CarStatus::setActive(bool flag){csm->set_active(flag);}
 // - 
 // -------------------------------------------------------------- 
 bool CarStatus::getInPit(){return csm->in_pit();}
-bool CarStatus::setInPit(bool currentlyInPit){csm->set_in_pit(currentlyInPit);}
+void CarStatus::setInPit(bool currentlyInPit){csm->set_in_pit(currentlyInPit);}
 
 
 // --------------------------------------------------------------

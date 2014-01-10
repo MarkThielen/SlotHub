@@ -165,8 +165,6 @@ void ControlUnit::run(){
 
   std::chrono::duration<int, std::milli> sleep_duration(500);
 
-  unsigned int prev_timer=0;
-  unsigned int laps=0;
   
   char *buffer = (char *)malloc(sizeof (struct CarreraResponse::ResponseData));
 
@@ -179,7 +177,6 @@ void ControlUnit::run(){
 
   while (!stop_execution){
 
-    unsigned int timer = 0, laptime = 0;
 
     // send request to CU
     write (getFileDescriptor(), CARRERA_TIMING_QUERY.c_str(), CARRERA_TIMING_QUERY.size());       

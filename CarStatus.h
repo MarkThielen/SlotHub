@@ -55,7 +55,7 @@ public:
   void setActive(bool flag);
  
   bool getInPit();
-  bool setInPit(bool flag);
+  void setInPit(bool flag);
 
   unsigned int getCurrentTimer();
   void setCurrentTimer(unsigned int timer);
