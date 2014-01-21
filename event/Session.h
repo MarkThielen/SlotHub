@@ -3,6 +3,8 @@
 #include <string>
 
 #include "CarStatus.h"
+#include "pb/SessionMessage.pb.h"
+
 
 class Session {
 
@@ -15,6 +17,8 @@ class Session {
 
 
  private:
+
+	SlotHub::SessionMessage *sm;
 
   
   // this script checks if the session is sane and also calculates the current
@@ -44,8 +48,12 @@ class Session {
 
  public:
 
+	Session();
+	
+	~Session();
+
   std::map<int,CarStatus*> getStandings();
-  void setStandings(std::map<int,CarStatus*> current_standings);
+
   
   // updates the current standings based on the car status 
   // that was passed. Normally that would happen inside the
@@ -62,8 +70,8 @@ class Session {
   session_rule_type getSessionRuleType();
   
 
-  void setPitRule(pit_rules rule);
-  pit_rules getPitRule();
+  void setPitRule(session_pit_rule rule);
+  session_pit_rule getPitRule();
 
 
   void setSessionRuleScript(std::string *rule_script);
@@ -77,7 +85,7 @@ class Session {
   void setTimeElapsed(unsigned int elapsed);
 
   unsigned int getTimeSet();
-  void setTimeSet(unsinged int set);
+  void setTimeSet(unsigned int set);
 
 
   unsigned int getLapsElapsed();
