@@ -20,14 +20,58 @@
   // updates the current standings based on the car status 
   // that was passed. Normally that would happen inside the
   // ControlUnit when a car finished a lap.
-  void updateStandings(CarStatus *status) {
+  void Session::updateStandings(CarreraResponse cr ) {
+	  
+		// -------------------------------------------------------------------------
+		// algorithm :
+		// - find car in standings
+		//		+ if not found, add it with maximum position number as it has not finished a lap and has not set any time. Postion no defined
+		// 		+ else 
+		//			+ updateTimeAndLapStatistics
+		//			+ determine new position based on set rules (laps / best time / etc.)
+		//			+ calculate new order. remove from current position, insert into new position, (potentially use vector instead of map or both)
+		// -------------------------------------------------------------------------
 	  
 	  
-	  
-	  
+		// -----------------------------------------------------------------------
+		// - Calculate and show laptime of last car crossing the finish line 
+		// -----------------------------------------------------------------------
+		if (cr.getResponseType() == CarreraResponse::CAR_STATUS) {
+		  
+		  // find car in current map of cars
+		  std::map<int,CarStatus*>::iterator iterCarStatus = standings.find(cr.getCarNumber()); 
+		  
+		  // update data for already active car
+		  if(iterCarStatus != standings.end())
+			iterCarStatus->second->updateTimeAndLapStatistics(cr.getTimer());
+		  // ----------------------------------------------
+		  // set initial data for new car on track
+		  // ---------------------------------------------
+		  else 
+			// add new car to list of available cars
+			standings.insert(std::pair<int, CarStatus*>(cr.getCarNumber(), new CarStatus(cr.getCarNumber())));
+		  
+		} 
+		// ---------------------------------------------------------------
+		// - collect fuel mode & status, start light status, tower mode 
+		// ---------------------------------------------------------------
+		else if (cr.getResponseType() == CarreraResponse::TRACK_STATUS) {
+		  
+		  for (std::map<int,CarStatus*>::iterator iterCarStatus = standings.begin(); iterCarStatus != standings.end(); ++iterCarStatus) {
+		
+			CarStatus *currentCar = iterCarStatus->second;
+		
+			// update fuel status
+			currentCar->setFuelStatus(cr.getCarFuelStatus(currentCar->getCarNumber()));
+		
+			// update PitStop Statistics
+			currentCar->updatePitStopStatistics(cr.carInPits(currentCar->getCarNumber()));
+		
+		  }
+
 	  
 	}
-
+}
 
 	std::map<int,CarStatus*> Session::getStandings() { return standings;}
  

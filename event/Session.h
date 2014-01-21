@@ -3,6 +3,7 @@
 #include <string>
 
 #include "CarStatus.h"
+#include "CarreraResponse.h"
 #include "pb/SessionMessage.pb.h"
 
 
@@ -45,7 +46,9 @@ class Session {
   // updates the current standings based on the car status 
   // that was passed. Normally that would happen inside the
   // ControlUnit when a car finished a lap.
-  void updateStandings(CarStatus *status);
+  void updateStandings(CarreraResponse cr);
+  
+  void updatePitStopAndFuelStatus();
 
   void setSessionType(session_type type);
   session_type getSessionType();
