@@ -29,20 +29,7 @@ class Session {
   // cars lap counting or timer might be paused until rule was obeyed
   std::string pit_rule_script;
 
-  session_type type;
-  session_status status;
-  session_rule_type rule_type;
-  session_pit_rule pit_rule;
-  
-
-  unsigned int time_elapsed;
-  unsigned int time_set;
-
-  unsigned int laps_elapsed;
-  unsigned int laps_set;
-
-  unsigned int start_time;
-
+	
   std::map<int,CarStatus*> standings;
 
 
@@ -58,7 +45,7 @@ class Session {
   // updates the current standings based on the car status 
   // that was passed. Normally that would happen inside the
   // ControlUnit when a car finished a lap.
-  void updateStandigs(CarStatus *status);
+  void updateStandings(CarStatus *status);
 
   void setSessionType(session_type type);
   session_type getSessionType();

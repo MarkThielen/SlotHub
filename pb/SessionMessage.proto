@@ -7,7 +7,7 @@ message SessionMessage {
 	required int32 type = 1;
 	required int32 status = 2;
 	required int32 rule_type = 3;
-	required int32 pit_rule_type = 4;
+	required int32 pit_rule = 4;
 
 	required int32 time_elapsed = 5;
 	required int32 time_set = 6;
