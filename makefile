@@ -1,5 +1,5 @@
 CC = g++
-CFLAGS = -std=c++11 -Wall
+CFLAGS = -std=c++11 -Wall -I./
 
 PB=protoc
 
@@ -10,11 +10,15 @@ LDFLAGS =
 LDLIBS = -lncurses -largtable2 -lprotobuf -lzmq
 DEBUGFLAGS=-ggdb
 
+CC_SOURCE_FILES = SlotHub.c ttyTools.c ControlUnit.cpp TextDisplay.cpp CarStatus.cpp TrackStatus.cpp CarreraResponse.cpp event/Session.cpp 
+PB_SOURCE_FILES = pb/TrackStatusMessage.pb.cc pb/CarStatusMessage.pb.cc pb/SessionMessage.pb.cc
+
+
 all: clean ProtoBuf SlotHub
 
 SlotHub: ProtoBuf
-	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(DEBUGFLAGS) SlotHub.c ttyTools.c ControlUnit.cpp TextDisplay.cpp CarStatus.cpp TrackStatus.cpp CarreraResponse.cpp pb/TrackStatusMessage.pb.cc pb/CarStatusMessage.pb.cc -o SlotHub
-
+	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(DEBUGFLAGS) $(CC_SOURCE_FILES) $(PB_SOURCE_FILES)
+	
 ProtoBuf:
 	$(PB) -I$(PB_DIRS) $(PB_FLAGS) $(PB_DIRS)/CarStatusMessage.proto
 	$(PB) -I$(PB_DIRS) $(PB_FLAGS) $(PB_DIRS)/TrackStatusMessage.proto	
