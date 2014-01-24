@@ -1,6 +1,8 @@
 CC = g++
 CFLAGS = -std=c++11 -Wall -I./
 
+OUTFILE=-o SlotHub
+
 PB=protoc
 
 PB_DIRS=./pb
@@ -17,7 +19,7 @@ PB_SOURCE_FILES = pb/TrackStatusMessage.pb.cc pb/CarStatusMessage.pb.cc pb/Sessi
 all: clean ProtoBuf SlotHub
 
 SlotHub: ProtoBuf
-	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(DEBUGFLAGS) $(CC_SOURCE_FILES) $(PB_SOURCE_FILES)
+	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(OUTFILE) $(DEBUGFLAGS) $(CC_SOURCE_FILES) $(PB_SOURCE_FILES)
 	
 ProtoBuf:
 	$(PB) -I$(PB_DIRS) $(PB_FLAGS) $(PB_DIRS)/CarStatusMessage.proto
@@ -39,5 +41,5 @@ ControlUnit:
 	$(CC) $(LD_FLAGS) $(LDLIBS) $(CFLAGS) $(DEBUGFLAGS) ControlUnit.cpp
 
 clean:
-	rm -rf *o SlotHub
+	rm -rf *o SlotHub a.out 
 	rm -f $(PB_DIRS)/*.pb.cc $(PB_DIRS)/*.pb.h
