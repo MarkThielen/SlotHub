@@ -6,6 +6,13 @@
 #include "CarreraResponse.h"
 #include "pb/SessionMessage.pb.h"
 
+extern "C" {
+	
+	#include <lua.h>
+	#include <lualib.h>
+	#include <lauxlib.h>
+	
+	}
 
 class Session {
 
@@ -21,6 +28,7 @@ class Session {
 
 	SlotHub::SessionMessage *sm;
 
+	lua_State *L;
   
   // this script checks if the session is sane and also calculates the current
   // car positioning based on the session_type and rule_type
@@ -36,7 +44,7 @@ class Session {
 
  public:
 
-	Session();
+	Session(std::string sessionRuleName, std::string pitRuleName, unsigned int lapsSet, unsigned int timeSet);
 	
 	~Session();
 
@@ -88,5 +96,8 @@ class Session {
 
   unsigned int getStartTime();
   void setStartTime(unsigned int time);
+  
+  unsigned int getFastestLaptime();
+  void setFastestLaptime(unsigned int laptime);
 
 };

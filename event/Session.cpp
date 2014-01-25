@@ -1,9 +1,39 @@
 #include "Session.h"
 
+extern "C" {
+	
+	#include <lua.h>
+	#include <lualib.h>
+	#include <lauxlib.h>
+	
+}
 
-	Session::Session(){
+	// ---------------------------------------
+	// - Session Constructor
+	// ---------------------------------------
+	Session::Session(std::string sessionRuleName, std::string pitRuleName, unsigned int lapsSet, unsigned int timeSet){
 		
+		// set session parameters
+		setLapsSet(lapsSet);
+		setTimeSet(timeSet);
+		
+		// intiate LUA
+		L = luaL_newstate();
+		luaL_openlibs(L);
+		
+		// load put rules script
+		//luaL_dofile(L,pitRuleName.c_str());
+		
+		// try to load session rule script
+		luaL_dofile(L,sessionRuleName.c_str());
+		
+		lua_getglobal(L,"showMessage");
+		lua_call(L,0,0);
+		
+		
+		// initiate SessionMessage 
 		sm = new SlotHub::SessionMessage();
+		
 		
 		
 		}	
@@ -31,6 +61,37 @@
 		//			+ determine new position based on set rules (laps / best time / etc.)
 		//			+ calculate new order. remove from current position, insert into new position, (potentially use vector instead of map or both)
 		// -------------------------------------------------------------------------
+	  
+		// ----------------------------------------------------------------------
+		// Call Lua Script with all available information to determine
+		// the state of
+		// - Ranking
+		// - etc.
+		//
+		// Session.LapsSet - Number of laps that were set for this session
+		// Session.LapsElapsed - Number of laps that have already been elapsed
+		// Session.TimeSet - Maximum time that the race should last
+		// Session.TimeElapsed - Time that has already elapsed
+		// Session.StartTime - Time when the Session has started
+		// Session.FastestLapTime - fastest lap time for this session
+		// 
+		// Table of
+		//		- Car #
+		//		- Fastest Lap Time
+		//		- Last Lap Time
+		//		- # of Laps
+		//		- # of Pit Stops
+		// 		- Position (?)
+		// -----------------------------------------------------------------------
+		// Results
+		// -----------------------------------------------------------------------
+		//
+		// - Current Ranking (CarPostion - Car#)
+		// - Session Status 
+		// - List of Cars with disabled Lap counting
+		//
+		// -----------------------------------------------------------------------
+	  
 	  
 	  
 		// -----------------------------------------------------------------------
@@ -76,43 +137,49 @@
 	std::map<int,CarStatus*> Session::getStandings() { return standings;}
  
 
-  void Session::setSessionType(Session::session_type type){ this->sm->set_type(type);}
+	void Session::setSessionType(Session::session_type type){ this->sm->set_type(type);}
   
-  Session::session_type Session::getSessionType(){return session_type(this->sm->type());}
+	Session::session_type Session::getSessionType(){return session_type(this->sm->type());}
 
 
-  void Session::setSessionStatus(session_status status){this->sm->set_status(status);}
-  Session::session_status Session::getSessionStatus() {  return session_status(this->sm->status()); }
+	  void Session::setSessionStatus(session_status status){this->sm->set_status(status);}
+	  Session::session_status Session::getSessionStatus() {  return session_status(this->sm->status()); }
 
-  void Session::setSessionRuleType(session_rule_type rule_type){this->sm->set_rule_type(rule_type);}
-  Session::session_rule_type Session::getSessionRuleType(){return session_rule_type(this->sm->rule_type());}
-  
+	  void Session::setSessionRuleType(session_rule_type rule_type){this->sm->set_rule_type(rule_type);}
+	  Session::session_rule_type Session::getSessionRuleType(){return session_rule_type(this->sm->rule_type());}
+	  
 
-  void Session::setPitRule(session_pit_rule rule){this->sm->set_pit_rule(rule);}
-  Session::session_pit_rule Session::getPitRule(){return session_pit_rule(this->sm->pit_rule()); }
-
-
-  void Session::setSessionRuleScript(std::string *rule_script){ this->session_rule_script = std::string(rule_script->c_str());}
-  std::string Session::getSessionRuleScript(){return std::string(session_rule_script);};
-
-  void Session::setPitRuleScript(std::string *rule_script){this->pit_rule_script = std::string(rule_script->c_str());}
-  std::string Session::getPitRuleScript(){return std::string(pit_rule_script);}
-
-  
-  unsigned int Session::getTimeElapsed(){return this->sm->time_elapsed();}
-  void Session::setTimeElapsed(unsigned int elapsed){this->sm->set_time_elapsed(elapsed);}
-
-  unsigned int Session::getTimeSet(){return this->sm->time_set();}
-  void Session::setTimeSet(unsigned int set){this->sm->set_time_set(set);}
+	  void Session::setPitRule(session_pit_rule rule){this->sm->set_pit_rule(rule);}
+	  Session::session_pit_rule Session::getPitRule(){return session_pit_rule(this->sm->pit_rule()); }
 
 
-  unsigned int Session::getLapsElapsed(){return this->sm->laps_elapsed();}
-  void Session::setLapsElapsed(unsigned int elapsed){this->sm->set_laps_elapsed(elapsed);}
+	  void Session::setSessionRuleScript(std::string *rule_script){ this->session_rule_script = std::string(rule_script->c_str());}
+	  std::string Session::getSessionRuleScript(){return std::string(session_rule_script);};
+
+	  void Session::setPitRuleScript(std::string *rule_script){this->pit_rule_script = std::string(rule_script->c_str());}
+	  std::string Session::getPitRuleScript(){return std::string(pit_rule_script);}
+
+	  
+	  unsigned int Session::getTimeElapsed(){return this->sm->time_elapsed();}
+	  void Session::setTimeElapsed(unsigned int elapsed){this->sm->set_time_elapsed(elapsed);}
+
+	  unsigned int Session::getTimeSet(){return this->sm->time_set();}
+	  void Session::setTimeSet(unsigned int set){this->sm->set_time_set(set);}
 
 
-  unsigned int Session::getLapsSet(){return this->sm->laps_set();}
-  void Session::setLapsSet(unsigned int set){this->sm->set_laps_set(set);}
+	  unsigned int Session::getLapsElapsed(){return this->sm->laps_elapsed();}
+	  void Session::setLapsElapsed(unsigned int elapsed){this->sm->set_laps_elapsed(elapsed);}
 
 
-  unsigned int Session::getStartTime(){return this->sm->start_time();}
-  void Session::setStartTime(unsigned int time){this->sm->set_start_time(time);}
+	  unsigned int Session::getLapsSet(){return this->sm->laps_set();}
+	  void Session::setLapsSet(unsigned int set){this->sm->set_laps_set(set);}
+
+
+	  unsigned int Session::getStartTime(){return this->sm->start_time();}
+	  void Session::setStartTime(unsigned int time){this->sm->set_start_time(time);}
+	  
+	  
+	  
+	  unsigned int Session::getFastestLaptime() {return this->sm->fastest_laptime();}
+	  void Session::setFastestLaptime(unsigned int laptime){this->sm->set_fastest_laptime(laptime);}
+	  

@@ -9,7 +9,7 @@ PB_DIRS=./pb
 PB_FLAGS=--cpp_out=$(PB_DIRS)
 
 LDFLAGS = 
-LDLIBS = -lncurses -largtable2 -lprotobuf -lzmq
+LDLIBS = -lncurses -largtable2 -lprotobuf -lzmq -llua
 DEBUGFLAGS=-ggdb
 
 CC_SOURCE_FILES = SlotHub.c ttyTools.c ControlUnit.cpp TextDisplay.cpp CarStatus.cpp TrackStatus.cpp CarreraResponse.cpp event/Session.cpp 

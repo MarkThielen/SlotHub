@@ -16,7 +16,7 @@ message SessionMessage {
 	required int32 laps_set = 8;
 	
 	required int32 start_time = 9;
-
+	required int32 fastest_laptime = 10;
 	
 
 	message CarPosition {
@@ -24,7 +24,7 @@ message SessionMessage {
 		required CarStatusMessage type = 2;
 	}
 
-	repeated CarPosition standings = 10;
+	repeated CarPosition standings = 11;
 
 
 }
