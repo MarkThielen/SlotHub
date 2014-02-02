@@ -7,6 +7,15 @@
 unsigned int CarStatus::getCarNumber() { return csm->car_number();}
 void CarStatus::setCarNumber(unsigned int carno){csm->set_car_number(carno);}
 
+
+// ---------------------------------------------------------------
+// - set postion of car in session
+// ---------------------------------------------------------------
+
+unsigned int CarStatus::getPosition(){ return csm->position();}
+void CarStatus::setPosition(unsigned int new_position){csm->set_position(new_position);}
+
+
 // --------------------------------------------------------------
 // - CurrentLapTime
 // -

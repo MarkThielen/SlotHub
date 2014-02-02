@@ -30,6 +30,8 @@ public:
 
   void updateCarStatus(CarStatus *carStatus);
 
+  unsigned int getPosition();
+  void setPosition(unsigned int new_position);
 
   unsigned int getCarNumber();
   void setCarNumber(unsigned int carno);
