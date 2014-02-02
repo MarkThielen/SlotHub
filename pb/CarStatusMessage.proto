@@ -9,6 +9,7 @@ message CarStatusMessage {
   required bool active 			= 6;
   required bool in_pit 			= 7;
   required int32 pit_stops 		= 8;
+  required int32 position			= 9;
 }
 
 
