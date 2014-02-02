@@ -26,7 +26,7 @@ extern "C" {
 		// intiate LUA
 		L = luaL_newstate();		
 		
-		if (L == NULL || P == NULL)
+		if (L == NULL)
 			std::cout << "error creating new lua state" << std::endl;
 		
 		luaL_openlibs(L);
