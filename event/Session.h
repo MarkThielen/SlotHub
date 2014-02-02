@@ -55,6 +55,9 @@ class Session {
   // that was passed. Normally that would happen inside the
   // ControlUnit when a car finished a lap.
   void updateStandings(CarreraResponse cr);
+
+  void updatePositions();
+
   
   void updatePitStopAndFuelStatus();
 

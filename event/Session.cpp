@@ -1,5 +1,7 @@
 #include "Session.h"
 
+#include <iostream>
+
 extern "C" {
 	
 	#include <lua.h>
@@ -13,36 +15,39 @@ extern "C" {
 	// ---------------------------------------
 	Session::Session(std::string sessionRuleName, std::string pitRuleName, unsigned int lapsSet, unsigned int timeSet){
 		
+		
+		// initiate SessionMessage
+		sm = new SlotHub::SessionMessage();
+		
 		// set session parameters
 		setLapsSet(lapsSet);
 		setTimeSet(timeSet);
 		
 		// intiate LUA
-		L = luaL_newstate();
+		L = luaL_newstate();		
+		
+		if (L == NULL || P == NULL)
+			std::cout << "error creating new lua state" << std::endl;
+		
 		luaL_openlibs(L);
-		
-		// load put rules script
-		//luaL_dofile(L,pitRuleName.c_str());
-		
+			
 		// try to load session rule script
-		luaL_dofile(L,sessionRuleName.c_str());
-		
-		lua_getglobal(L,"showMessage");
-		lua_call(L,0,0);
-		
-		
-		// initiate SessionMessage 
-		sm = new SlotHub::SessionMessage();
-		
-		
-		
+		if (luaL_dofile(L,sessionRuleName.c_str()) != 0)
+			std::cout << "error loading " << sessionRuleName.c_str() << std::endl;
+					
 		}	
   
   
-  
+	// --------------------------------------------
+	// - Destructor
+	// --------------------------------------------
 	Session::~Session(){
 		
+		// delete session message
 		delete (sm);
+		
+		// close Lua 
+		lua_close(L);	
 			
 		}	
   	
@@ -52,48 +57,7 @@ extern "C" {
   // ControlUnit when a car finished a lap.
   void Session::updateStandings(CarreraResponse cr ) {
 	  
-		// -------------------------------------------------------------------------
-		// algorithm :
-		// - find car in standings
-		//		+ if not found, add it with maximum position number as it has not finished a lap and has not set any time. Postion no defined
-		// 		+ else 
-		//			+ updateTimeAndLapStatistics
-		//			+ determine new position based on set rules (laps / best time / etc.)
-		//			+ calculate new order. remove from current position, insert into new position, (potentially use vector instead of map or both)
-		// -------------------------------------------------------------------------
-	  
-		// ----------------------------------------------------------------------
-		// Call Lua Script with all available information to determine
-		// the state of
-		// - Ranking
-		// - etc.
-		//
-		// Session.LapsSet - Number of laps that were set for this session
-		// Session.LapsElapsed - Number of laps that have already been elapsed
-		// Session.TimeSet - Maximum time that the race should last
-		// Session.TimeElapsed - Time that has already elapsed
-		// Session.StartTime - Time when the Session has started
-		// Session.FastestLapTime - fastest lap time for this session
-		// 
-		// Table of
-		//		- Car #
-		//		- Fastest Lap Time
-		//		- Last Lap Time
-		//		- # of Laps
-		//		- # of Pit Stops
-		// 		- Position (?)
-		// -----------------------------------------------------------------------
-		// Results
-		// -----------------------------------------------------------------------
-		//
-		// - Current Ranking (CarPostion - Car#)
-		// - Session Status 
-		// - List of Cars with disabled Lap counting
-		//
-		// -----------------------------------------------------------------------
-	  
-	  
-	  
+		  
 		// -----------------------------------------------------------------------
 		// - Calculate and show laptime of last car crossing the finish line 
 		// -----------------------------------------------------------------------
@@ -129,10 +93,65 @@ extern "C" {
 			currentCar->updatePitStopStatistics(cr.carInPits(currentCar->getCarNumber()));
 		
 		  }
+	}
+	
+	
 
 	  
-	}
+		
 }
+
+
+void Session::updatePositions() {
+// -------------------------------------------------------------------------
+// algorithm :
+// - find car in standings
+//		+ if not found, add it with maximum position number as it has not finished a lap and has not set any time. Postion no defined
+// 		+ else 
+//			+ updateTimeAndLapStatistics
+//			+ determine new position based on set rules (laps / best time / etc.)
+//			+ calculate new order. remove from current position, insert into new position, (potentially use vector instead of map or both)
+// -------------------------------------------------------------------------
+ 
+// ----------------------------------------------------------------------
+// Call Lua Script with all available information to determine
+// the state of
+// - Ranking
+// - etc.
+//
+// Session.LapsSet - Number of laps that were set for this session
+// Session.LapsElapsed - Number of laps that have already been elapsed
+// Session.TimeSet - Maximum time that the race should last
+// Session.TimeElapsed - Time that has already elapsed
+// Session.StartTime - Time when the Session has started
+// Session.FastestLapTime - fastest lap time for this session
+// 
+// Table of
+//		- KEY
+//			- Car #
+//		- ENTRY 			
+//			- Fastest Lap Time
+//			- Last Lap Time
+//			- # of Laps
+//			- # of Pit Stops
+// 			- Position (?)
+// -----------------------------------------------------------------------
+// Results
+// -----------------------------------------------------------------------
+//
+// - Current Ranking (CarPostion - Car#)
+// - Session Status 
+// - List of Cars with disabled Lap counting
+//
+// -----------------------------------------------------------------------	
+	
+	
+	
+	
+	
+}
+
+
 
 	std::map<int,CarStatus*> Session::getStandings() { return standings;}
  
